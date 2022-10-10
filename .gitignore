@@ -4,6 +4,7 @@
 .vscode/
 /venv/
 /.venv/
+.env
 /env/
 /static/
 wagtail_space_liveblog/media/

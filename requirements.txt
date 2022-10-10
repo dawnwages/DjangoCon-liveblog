@@ -14,3 +14,4 @@ django-storages
 requests==2.26.0
 whitenoise==6.0.0
 emoji_data_python
+django-environ==0.8.0

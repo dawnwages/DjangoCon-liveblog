@@ -1,3 +1,4 @@
+import environ
 import os
 
 import dj_database_url
@@ -5,17 +6,19 @@ import dj_database_url
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 
-env = os.environ.copy()
+env = environ.Env()
+
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 DEBUG = False
 
 if "SECRET_KEY" in env:
-    SECRET_KEY = env["SECRET_KEY"]
+    SECRET_KEY = env("SECRET_KEY")
 
 if "ALLOWED_HOSTS" in env:
-    ALLOWED_HOSTS = env["ALLOWED_HOSTS"].split(",")
+    ALLOWED_HOSTS = env("ALLOWED_HOSTS").split(",")
 
-APP_NAME = env.get("APP_NAME", "wagtail_space_liveblog")
+APP_NAME = env.bool("APP_NAME", "wagtail_space_liveblog")
 
 # Application definition
 
@@ -79,11 +82,13 @@ TEMPLATES = [
 ]
 
 ASGI_APPLICATION = "wagtail_space_liveblog.asgi.application"
+
+# https://github.com/django/channels_redis
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [env["REDIS_URL"] if "REDIS_URL" in env else ("127.0.0.1", 6379)],
+            "hosts": [env("REDIS_URL") if "REDIS_URL" in env else ("127.0.0.1", 6379)],
         },
     },
 }
@@ -95,7 +100,7 @@ if "REDIS_URL" in env:
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": env["REDIS_URL"],
+            "LOCATION": env("REDIS_URL"),
         }
     }
 else:
@@ -114,7 +119,7 @@ else:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": env.get("PGDATABASE", APP_NAME),
+            "NAME": env.bool("PGDATABASE", APP_NAME),
             "CONN_MAX_AGE": 600,
             # User, host and port can be configured by the PGUSER, PGHOST and
             # PGPORT environment variables (these get picked up by libpq).
@@ -172,11 +177,11 @@ STATICFILES_DIRS = [
 # JavaScript / CSS assets being served from cache (e.g. after a Wagtail upgrade).
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-STATIC_ROOT = env.get("STATIC_ROOT", os.path.join(BASE_DIR, "static"))
-STATIC_URL = env.get("STATIC_URL", "/static/")
+STATIC_ROOT = env.bool("STATIC_ROOT", os.path.join(BASE_DIR, "static"))
+STATIC_URL = env.bool("STATIC_URL", "/static/")
 
-MEDIA_ROOT = env.get("MEDIA_DIR", os.path.join(BASE_DIR, "media"))
-MEDIA_URL = env.get("MEDIA_URL", "/media/")
+MEDIA_ROOT = env.bool("MEDIA_DIR", os.path.join(BASE_DIR, "media"))
+MEDIA_URL = env.bool("MEDIA_URL", "/media/")
 
 
 # Logging
@@ -229,7 +234,7 @@ if "AWS_STORAGE_BUCKET_NAME" in env:
     # https://docs.djangoproject.com/en/stable/ref/settings/#default-file-storage
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
-    AWS_STORAGE_BUCKET_NAME = env["AWS_STORAGE_BUCKET_NAME"]
+    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
 
     # Disables signing of the S3 objects' URLs. When set to True it
     # will append authorization querystring to each URL.
@@ -249,18 +254,18 @@ if "AWS_STORAGE_BUCKET_NAME" in env:
     # behind a CDN using a custom domain, e.g. media.llamasavers.com.
     # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#cloudfront
     if "AWS_S3_CUSTOM_DOMAIN" in env:
-        AWS_S3_CUSTOM_DOMAIN = env["AWS_S3_CUSTOM_DOMAIN"]
+        AWS_S3_CUSTOM_DOMAIN = env("AWS_S3_CUSTOM_DOMAIN")
 
     # When signing URLs is facilitated, the region must be set, because the
     # global S3 endpoint does not seem to support that. Set this only if
     # necessary.
     if "AWS_S3_REGION_NAME" in env:
-        AWS_S3_REGION_NAME = env["AWS_S3_REGION_NAME"]
+        AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME")
 
     # This settings lets you force using http or https protocol when generating
     # the URLs to the files. Set https as default.
     # https://github.com/jschneier/django-storages/blob/10d1929de5e0318dbd63d715db4bebc9a42257b5/storages/backends/s3boto3.py#L217
-    AWS_S3_URL_PROTOCOL = env.get("AWS_S3_URL_PROTOCOL", "https:")
+    AWS_S3_URL_PROTOCOL = env.bool("AWS_S3_URL_PROTOCOL", "https:")
 
 
 # Wagtail settings
@@ -279,35 +284,35 @@ WAGTAIL_LIVE_PUBLISHER = (
 WAGTAIL_LIVE_RECEIVER = "wagtail_space_liveblog.liveblog.receivers.SlackReceiver"
 
 if "SLACK_SIGNING_SECRET" in env:
-    SLACK_SIGNING_SECRET = env["SLACK_SIGNING_SECRET"]
+    SLACK_SIGNING_SECRET = env("SLACK_SIGNING_SECRET")
 if "SLACK_BOT_TOKEN" in env:
-    SLACK_BOT_TOKEN = env["SLACK_BOT_TOKEN"]
+    SLACK_BOT_TOKEN = env("SLACK_BOT_TOKEN")
 
 # Security configuration
 # https://docs.djangoproject.com/en/stable/ref/middleware/#module-django.middleware.security
 
-if env.get("SECURE_SSL_REDIRECT", "true").strip().lower() == "true":
+if env.bool("SECURE_SSL_REDIRECT", "true").strip().lower() == "true":
     SECURE_SSL_REDIRECT = True
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 if "SECURE_HSTS_SECONDS" in env:
     try:
-        SECURE_HSTS_SECONDS = int(env["SECURE_HSTS_SECONDS"])
+        SECURE_HSTS_SECONDS = int(env("SECURE_HSTS_SECONDS"))
     except ValueError:
         pass
 
-if env.get("SECURE_BROWSER_XSS_FILTER", "true").lower().strip() == "true":
+if env.bool("SECURE_BROWSER_XSS_FILTER", "true").lower().strip() == "true":
     SECURE_BROWSER_XSS_FILTER = True
 
-if env.get("SECURE_CONTENT_TYPE_NOSNIFF", "true").lower().strip() == "true":
+if env.bool("SECURE_CONTENT_TYPE_NOSNIFF", "true").lower().strip() == "true":
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
 # Referrer-policy header settings
 # https://django-referrer-policy.readthedocs.io/en/1.0/
 
-REFERRER_POLICY = env.get(
+REFERRER_POLICY = env.bool(
     "SECURE_REFERRER_POLICY", "no-referrer-when-downgrade"
 ).strip()
 
@@ -317,4 +322,4 @@ FAVICON_PATH = "images/favicons/favicon.ico"
 
 # Base URL to use when referring to full URLs within the Wagtail admin backend.
 if "PRIMARY_HOST" in env:
-    BASE_URL = "http://%s/" % env["PRIMARY_HOST"]
+    BASE_URL = "http://%s/" % env("PRIMARY_HOST")
