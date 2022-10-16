@@ -39,6 +39,7 @@ RUN python -m venv $VIRTUAL_ENV
 RUN pip install --upgrade pip
 
 # Install the application server.
+RUN pip install "django-environ==0.8.0"
 RUN pip install "websockets"
 RUN pip install "uvicorn"
 RUN pip install "gunicorn==20.0.4"

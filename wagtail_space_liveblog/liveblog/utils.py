@@ -13,6 +13,15 @@ def create_person(slack_id):
             "You won't be able to fetch a user's details from Slack without this setting defined."
         )
 
+    response = requests.get(
+        "http://slack.com/api/users.info",
+        headers={"Authorization": f"Bearer {slack_bot_token}"},
+        params={"user": slack_id},
+    )
+
+    response.raise_for_status()
+    result = response.json()
+
     response2 = requests.get(
         "http://slack.com/api/apps.event.authorizations.list",
         headers={"Authorization": f"Bearer {slack_bot_token}"},
@@ -20,7 +29,8 @@ def create_person(slack_id):
     )
     response2.raise_for_status()
     result2 = response2.json()
-    return Person.objects.create(slack_id=slack_id, name=result2["user"]["real_name"])
+    print(result2)
+    return Person.objects.create(slack_id=slack_id, name=result["user"]["real_name"])
 
 
 def get_person_or_create(slack_id):

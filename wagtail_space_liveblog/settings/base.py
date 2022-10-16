@@ -291,7 +291,7 @@ if "SLACK_BOT_TOKEN" in env:
 # Security configuration
 # https://docs.djangoproject.com/en/stable/ref/middleware/#module-django.middleware.security
 
-if env.bool("SECURE_SSL_REDIRECT", "true").strip().lower() == "true":
+if env.bool("SECURE_SSL_REDIRECT", "true") == "true":
     SECURE_SSL_REDIRECT = True
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

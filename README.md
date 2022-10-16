@@ -73,3 +73,9 @@ Create the old version of the application. Slack updated their API Feb 2021.
 ### Heroku
 
 ### Digital Ocean
+
+## Set Up Slack Integration
+
+- go to [Slack API](https://api.slack.com/apps?new_app=1)
+- New slack app
+- create "classic" version of the app

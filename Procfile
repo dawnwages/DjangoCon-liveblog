@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn dawnwagesinfo.wsgi
+web: gunicorn wagtail_space_liveblog.asgi
